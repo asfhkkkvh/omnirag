@@ -39,7 +39,7 @@ from typing import Any, Dict, List, Optional
 
 from app.config import settings
 from app.graph.workflow import run_query
-from app.llm import get_llm
+from app.llm import get_llm, get_eval_judge_llm
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def run_evaluation(
     from ragas.llms import LangchainLLMWrapper
     from ragas.run_config import RunConfig
 
-    eval_llm = LangchainLLMWrapper(get_llm(temperature=0))
+    eval_llm = LangchainLLMWrapper(get_eval_judge_llm())
     from app.rag.ingestion import get_dense_embeddings
 
     eval_embeddings = LangchainEmbeddingsWrapper(get_dense_embeddings())
@@ -146,6 +146,10 @@ def run_evaluation(
     )
 
     metrics = [faithfulness, answer_relevancy, context_precision, context_recall]
+    # DeepSeek judge 兼容：strictness 默认 2 内部请求 n=2，DeepSeek 仅支持 n=1 → 400
+    for _m in (answer_relevancy, context_recall):
+        if hasattr(_m, "strictness"):
+            _m.strictness = 1
 
     ragas_samples: list = []
     per_sample_meta: List[Dict[str, Any]] = []

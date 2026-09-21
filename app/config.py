@@ -21,6 +21,12 @@ class Settings(BaseSettings):
         "embedding-3", validation_alias="ZHIPU_EMBEDDING_MODEL"
     )
 
+    # ── 评估 judge LLM（可选，DeepSeek 官方 API）───────────────────
+    # 配了 DEEPSEEK_API_KEY 时，RAGAS 的 judge 用 DeepSeek 而非智谱 GLM，
+    # 消除「judge 与生成同模型」的自引用偏差；未配置则回退智谱 GLM。
+    deepseek_api_key: str = Field("", validation_alias="DEEPSEEK_API_KEY")
+    eval_judge_model: str = Field("deepseek-chat", validation_alias="EVAL_JUDGE_MODEL")
+
     # ── LangSmith 追踪配置 ────────────────────────────────────────
     langchain_tracing_v2: str = Field("true", validation_alias="LANGCHAIN_TRACING_V2")
     langchain_api_key: str = Field(..., validation_alias="LANGCHAIN_API_KEY")

@@ -17,6 +17,8 @@ from langchain_community.chat_models import ChatZhipuAI
 
 from app.config import settings
 
+from langchain_openai import ChatOpenAI
+
 
 def get_llm(
     temperature: float = 0.0,
@@ -35,3 +37,19 @@ def get_llm(
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
     return ChatZhipuAI(**kwargs)
+
+
+def get_eval_judge_llm():
+    """RAGAS 评估用的 judge LLM。
+
+    配了 DEEPSEEK_API_KEY 时用 DeepSeek 官方 API（与生成模型解耦，
+    避免 judge 与生成同模型导致的自引用偏差）；未配置则回退智谱 GLM。
+    """
+    if settings.deepseek_api_key:
+        return ChatOpenAI(
+            model=settings.eval_judge_model,
+            api_key=settings.deepseek_api_key,
+            base_url="https://api.deepseek.com",
+            temperature=0,
+        )
+    return get_llm(temperature=0)
